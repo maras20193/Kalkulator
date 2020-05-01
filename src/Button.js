@@ -8,6 +8,7 @@ const Button = (props) => {
         value={props.title}
         onClick={props.handle}
         key={props.title}
+        data-type={props.type}
       >
         {props.title}{" "}
       </button>{" "}
