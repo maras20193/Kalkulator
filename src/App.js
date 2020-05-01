@@ -5,59 +5,96 @@ import "./css/style.css";
 
 class App extends Component {
   state = {
-    valueHistoryOld: "",
-    prevValue: "",
+    prevValue: 0,
     nextValue: "",
     operator: "",
+    result: "",
   };
 
   showResult = (e) => {
-    const {
-      valueHistoryOld: valueHistory,
-      prevValue,
-      nextValue,
-      operator,
-    } = this.state;
-    console.log(e.target.innerText);
+    const { prevValue, nextValue, result, operator } = this.state;
 
     /////Jesli wprowadzimy number
     if (e.target.dataset.type === "number") {
       const value = e.target.value;
-
-      /////Jesli wprowadzimy number
-      if (!prevValue) {
-        this.setState({
-          prevValue: value,
-          valueHistory: this.state.valueHistoryOld + value,
-        });
-      } else {
-        this.setState({
-          nextValue: value,
-          valueHistory: this.state.valueHistoryOld + value,
-        });
-      }
+      this.setState({
+        nextValue: nextValue + value,
+      });
     }
 
-    /////Jesli operator
     if (e.target.dataset.type === "operator") {
       const operator = e.target.value;
-      if (!nextValue) {
+
+      if (!prevValue) {
         this.setState({
-          operator,
-          valueHistory: this.state.valueHistoryOld + operator,
+          operator: operator,
+          prevValue: nextValue,
+          nextValue: "",
         });
       } else {
         this.setState({
-          prevValue: this.calculate(prevValue, nextValue),
-          nextValue: "",
           operator: operator,
-          valueHistory: this.state.valueHistoryOld + operator,
+          prevValue: nextValue,
+          result: this.calculate(result ? result : prevValue, nextValue),
+          nextValue: "",
         });
       }
     }
-  };
 
-  calculate = (a, b) => {
+    if (e.target.dataset.type === "equal") {
+      this.setState({
+        result: this.calculate(result ? result : prevValue, nextValue),
+      });
+    }
+  };
+  // showResult = (e) => {
+  //   const { prevValue, nextValue, result, operato } = this.state;
+
+  //   console.log(e.target.innerText);
+
+  //   /////Jesli wprowadzimy number
+  //   if (e.target.dataset.type === "number") {
+  //     const value = e.target.value;
+
+  //     /////Jesli wprowadzimy number
+  //     if (!prevValue) {
+  //       this.setState({
+  //         prevValue: value,
+  //         valueHistory: this.state.valueHistoryOld + value,
+  //       });
+  //     } else {
+  //       this.setState({
+  //         nextValue: value,
+  //         valueHistory: this.state.valueHistoryOld + value,
+  //       });
+  //     }
+  //   }
+
+  //   /////Jesli operator
+  //   if (e.target.dataset.type === "operator") {
+  //     const operator = e.target.value;
+  //     if (!nextValue) {
+  //       this.setState({
+  //         operator,
+  //         valueHistory: this.state.valueHistoryOld + operator,
+  //       });
+  //     } else {
+  //       this.setState({
+  //         prevValue: this.calculate(prevValue, nextValue),
+  //         nextValue: "",
+  //         operator: operator,
+  //         valueHistory: this.state.valueHistoryOld + operator,
+  //       });
+  //     }
+  //   }
+  //   if (e.target.dataset.type === "equal") {
+  //     this.setState({
+  //       prevValue: this.calculate(prevValue, nextValue),
+  //     });
+  //   }
+  // };
+
+  calculate = (a = 0, b = 0) => {
     const operator = this.state.operator;
     if (operator === "+") return this.add(a, b);
     else if (operator === "-") return this.sub(a, b);
@@ -92,17 +129,31 @@ class App extends Component {
     />
   ));
 
+  buttonEq = (
+    <Button
+      title={"="}
+      handle={this.showResult}
+      type="equal"
+      key={"="}
+      class="btn btn-operator"
+    />
+  );
+
   render() {
     return (
       <>
+        <div className="value-history"></div>
+        <div className="value">{this.state.value}</div>
         <div className="value-history">{this.state.valueHistoryOld}</div>
         <div className="value">
-          {this.state.nextValue ? this.state.nextValue : this.state.prevValue}
+          {this.state.result ? this.state.result : this.state.nextValue}
         </div>
         {this.buttonsNum}
         {this.buttonsOp}
+        {this.buttonEq}
       </>
     );
   }
 }
+
 export default App;
