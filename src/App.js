@@ -1,98 +1,90 @@
 import React, { Component } from "react";
-import { numberBtnArray, operatorBtnArray } from "./const";
+import {
+  numberBtnArray,
+  operatorBtnArray,
+  mathBtnArray,
+  clearBtnArray,
+} from "./const";
 import Button from "./Button";
 import "./css/style.css";
 
 class App extends Component {
   state = {
     prevValue: 0,
-    nextValue: "",
+    nextValue: 0,
     operator: "",
     result: "",
+    useEqual: false,
+    block: false,
   };
 
-  showResult = (e) => {
-    const { prevValue, nextValue, result, operator } = this.state;
+  handleNumberBtn = (e) => {
+    const { prevValue, nextValue, operator, result } = this.state;
+    const value = e.target.value;
 
-    /////Jesli wprowadzimy number
-    if (e.target.dataset.type === "number") {
-      const value = e.target.value;
+    this.setState({
+      nextValue: nextValue === 0 ? value : nextValue + value,
+      result: nextValue === 0 ? value : nextValue + value,
+      block: false,
+    });
+  };
+
+  handleOperatorBtn = (e) => {
+    const { prevValue, nextValue, operator, useEqual, block } = this.state;
+    const newOperator = e.target.value;
+    if (block) return;
+    //// sprawdzenie czy uzyty =, aby operator btn nie dodal od razu liczby po kliknieciu ----- flaga useEqual
+    if (useEqual) {
       this.setState({
-        nextValue: nextValue + value,
+        nextValue: "",
+        useEqual: false,
       });
-    }
-
-    if (e.target.dataset.type === "operator") {
-      const operator = e.target.value;
-
-      if (!prevValue) {
-        this.setState({
-          operator: operator,
-          prevValue: nextValue,
-          nextValue: "",
-        });
-      } else {
-        this.setState({
-          operator: operator,
-          prevValue: nextValue,
-          result: this.calculate(result ? result : prevValue, nextValue),
-          nextValue: "",
-        });
-      }
-    }
-
-    if (e.target.dataset.type === "equal") {
+    } else if (!operator) {
       this.setState({
-        result: this.calculate(result ? result : prevValue, nextValue),
+        operator: newOperator,
+        prevValue: nextValue,
+        nextValue: "",
+      });
+    } else {
+      this.setState({
+        operator: newOperator,
+        result: this.calculate(prevValue, nextValue),
+        prevValue: this.calculate(prevValue, nextValue),
+        nextValue: "",
       });
     }
   };
-  // showResult = (e) => {
-  //   const { prevValue, nextValue, result, operato } = this.state;
+  handleEqualBtn = (e) => {
+    const { prevValue, nextValue, operator, block } = this.state;
+    if (block) return;
+    this.setState({
+      result: this.calculate(prevValue, nextValue),
+      prevValue: this.calculate(prevValue, nextValue),
+      useEqual: true,
+    });
+  };
+  handleMathBtn = (e) => {
+    const { prevValue, nextValue, result } = this.state;
+    const newOperator = e.target.value;
 
-  //   console.log(e.target.innerText);
-
-  //   /////Jesli wprowadzimy number
-  //   if (e.target.dataset.type === "number") {
-  //     const value = e.target.value;
-
-  //     /////Jesli wprowadzimy number
-  //     if (!prevValue) {
-  //       this.setState({
-  //         prevValue: value,
-  //         valueHistory: this.state.valueHistoryOld + value,
-  //       });
-  //     } else {
-  //       this.setState({
-  //         nextValue: value,
-  //         valueHistory: this.state.valueHistoryOld + value,
-  //       });
-  //     }
-  //   }
-
-  //   /////Jesli operator
-  //   if (e.target.dataset.type === "operator") {
-  //     const operator = e.target.value;
-  //     if (!nextValue) {
-  //       this.setState({
-  //         operator,
-  //         valueHistory: this.state.valueHistoryOld + operator,
-  //       });
-  //     } else {
-  //       this.setState({
-  //         prevValue: this.calculate(prevValue, nextValue),
-  //         nextValue: "",
-  //         operator: operator,
-  //         valueHistory: this.state.valueHistoryOld + operator,
-  //       });
-  //     }
-  //   }
-  //   if (e.target.dataset.type === "equal") {
-  //     this.setState({
-  //       prevValue: this.calculate(prevValue, nextValue),
-  //     });
-  //   }
-  // };
+    this.setState({
+      operator: newOperator,
+      result: this.calculateMath(result, newOperator),
+      prevValue: this.calculateMath(result, newOperator),
+      nextValue: "",
+    });
+  };
+  handleClearBtn = (e) => {
+    const whichClear = e.target.value;
+    console.log(whichClear);
+    if (whichClear === "CE") {
+      this.clearOne();
+    } else if (whichClear === "C") {
+      this.clearAll();
+    } else if (whichClear === "Back") {
+      this.clearAll();
+    }
+  };
 
   calculate = (a = 0, b = 0) => {
     const operator = this.state.operator;
@@ -102,16 +94,51 @@ class App extends Component {
     else if (operator === "/") return this.div(a, b);
   };
 
+  calculateMath = (a, operator) => {
+    if (operator === "^2") {
+      return this.potega(a);
+    } else if (operator === "sqrt") {
+      return this.sqrt(a);
+    } else if (operator === "1/x") {
+      if (a == 0) {
+        this.setState({
+          block: true,
+        });
+        return "Nie dziel przez zero";
+      } else return this.ulamek(a);
+    }
+  };
+
+  clearOne = () => {
+    this.setState({
+      nextValue: 0,
+      result: 0,
+    });
+  };
+  clearAll = () => {
+    this.setState({
+      prevValue: 0,
+      nextValue: 0,
+      operator: "",
+      result: "",
+      useEqual: false,
+    });
+  };
+  BackOne = () => {};
+
   add = (a, b) => a * 1 + b * 1;
   sub = (a, b) => a * 1 - b * 1;
   mult = (a, b) => a * b;
   div = (a, b) => a / b;
+  potega = (a) => a * a;
+  sqrt = (a) => Math.sqrt(a);
+  ulamek = (a) => 1 / a;
 
   ///// Przyciski liczbowe
   buttonsNum = numberBtnArray.map((button) => (
     <Button
       title={button}
-      handle={this.showResult}
+      handle={this.handleNumberBtn}
       type="number"
       key={button}
       class="btn btn-number"
@@ -122,20 +149,38 @@ class App extends Component {
   buttonsOp = operatorBtnArray.map((button) => (
     <Button
       title={button}
-      handle={this.showResult}
+      handle={this.handleOperatorBtn}
       type="operator"
       key={button}
       class="btn btn-operator"
+    />
+  ));
+  buttonsMath = mathBtnArray.map((button) => (
+    <Button
+      title={button}
+      handle={this.handleMathBtn}
+      type="math"
+      key={button}
+      class="btn btn-math"
+    />
+  ));
+  buttonsClear = clearBtnArray.map((button) => (
+    <Button
+      title={button}
+      handle={this.handleClearBtn}
+      type="clear"
+      key={button}
+      class="btn btn-clear"
     />
   ));
 
   buttonEq = (
     <Button
       title={"="}
-      handle={this.showResult}
+      handle={this.handleEqualBtn}
       type="equal"
       key={"="}
-      class="btn btn-operator"
+      class="btn btn-equal"
     />
   );
 
@@ -151,6 +196,8 @@ class App extends Component {
         {this.buttonsNum}
         {this.buttonsOp}
         {this.buttonEq}
+        {this.buttonsMath}
+        {this.buttonsClear}
       </>
     );
   }
